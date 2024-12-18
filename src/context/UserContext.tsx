@@ -14,6 +14,7 @@ import { useMagic } from './MagicProvider';
 // Define the type for the user
 type User = {
   address: string;
+  issuer: string;
 };
 
 // Define the type for the user context.
@@ -45,6 +46,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   );
   // Initialize user state to hold user's account information.
   const [address, setAddress] = useState<string | null>(null);
+  const [issuer, setIssuer] = useState<string | null>(null);
   const [balance, setBalance] = useState<Hbar | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   // Function to retrieve and set user's account.
@@ -56,13 +58,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
       const isLoggedIn = await magic.user.isLoggedIn();
       if (!isLoggedIn) return;
-
-      const { publicAddress } = await magic.user.getInfo();
-      if (!publicAddress) return;
+      const { publicAddress, issuer } = await magic.user.getInfo();
+      if (!publicAddress || !issuer) return;
 
       const accountBalance = await hashClient.getAccountBalance(publicAddress);
       setBalance(accountBalance.hbars);
       setAddress(publicAddress);
+      setIssuer(issuer);
     } catch (error) {
       console.error('Failed to fetch user account:', error);
       setBalance(null);
@@ -80,7 +82,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <UserContext.Provider
       value={{
-        user: address ? { address } : null,
+        user: address && issuer ? { address, issuer } : null,
         balance,
         loading,
         fetchUser: fetchUserAccount,

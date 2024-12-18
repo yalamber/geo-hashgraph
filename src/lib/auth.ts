@@ -18,6 +18,7 @@ export async function verifyAuth(request: Request) {
     return {
       authorized: true,
       address: metadata.publicAddress,
+      issuer: metadata.issuer,
     };
   } catch (error: unknown) {
     console.error('Auth validation error:', error);
@@ -26,4 +27,4 @@ export async function verifyAuth(request: Request) {
       status: 401,
     };
   }
-} 
+}

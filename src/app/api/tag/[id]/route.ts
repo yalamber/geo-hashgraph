@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import redis from '@/lib/redis';
+import { verifyAuth } from '@/lib/auth';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const tagId = params.id;
+    const auth = await verifyAuth(request);
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+    const { id: tagId } = await params;
 
     if (!tagId) {
       return NextResponse.json(
@@ -31,37 +36,45 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const tagId = params.id;
+// export async function DELETE(
+//   request: Request,
+//   { params }: { params: { id: string } }
+// ) {
+//   try {
+//     const auth = await verifyAuth(request);
+//     if ('error' in auth) {
+//       return NextResponse.json(
+//         { error: auth.error },
+//         { status: auth.status }
+//       );
+//     }
 
-    if (!tagId) {
-      return NextResponse.json(
-        { error: 'Tag ID is required' },
-        { status: 400 }
-      );
-    }
+//     const tagId = params.id;
 
-    // Delete tag data from Redis
-    await redis.del(`tag:${tagId}`);
+//     if (!tagId) {
+//       return NextResponse.json(
+//         { error: 'Tag ID is required' },
+//         { status: 400 }
+//       );
+//     }
 
-    // Remove tag from all accounts (you might want to track owner instead)
-    const accounts = await redis.keys('account:*:tags');
-    await Promise.all(
-      accounts.map(async (accountKey) => {
-        await redis.srem(accountKey, tagId);
-      })
-    );
+//     // Delete tag data from Redis
+//     await redis.del(`tag:${tagId}`);
 
-    return NextResponse.json({ message: 'Tag deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting tag:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete tag' },
-      { status: 500 }
-    );
-  }
-}
+//     // Remove tag from all accounts (you might want to track owner instead)
+//     const accounts = await redis.keys('account:*:tags');
+//     await Promise.all(
+//       accounts.map(async (accountKey) => {
+//         await redis.srem(accountKey, tagId);
+//       })
+//     );
+
+//     return NextResponse.json({ message: 'Tag deleted successfully' });
+//   } catch (error) {
+//     console.error('Error deleting tag:', error);
+//     return NextResponse.json(
+//       { error: 'Failed to delete tag' },
+//       { status: 500 }
+//     );
+//   }
+// }

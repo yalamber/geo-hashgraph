@@ -8,8 +8,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "agent:server": "node --experimental-strip-types --env-file=.env ./src/server/agent.ts",
-    "agent:create-topics": "node --experimental-strip-types --env-file=.env ./src/scripts/create-topics.ts",
     "agent:transfer-hbar": "node --experimental-strip-types --env-file=.env ./src/scripts/transfer-hbar.ts"
   },
   "dependencies": {

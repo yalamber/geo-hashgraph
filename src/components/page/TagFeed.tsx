@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useMagic } from '@/context/MagicProvider';
 
 interface Message {
   sequenceNumber: string;
@@ -27,17 +28,28 @@ interface TagDetails {
 export default function TagFeedPage() {
   const params = useParams();
   const { toast } = useToast();
+  const { magic } = useMagic();
   const [tag, setTag] = useState<TagDetails | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const [interval, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+
+  const formatConsensusTimestamp = (timestamp: string) => {
+    const [seconds, nanos] = timestamp.split('.');
+    const milliseconds = parseInt(seconds) * 1000 + parseInt(nanos.slice(0, 3));
+    return new Date(milliseconds).toLocaleString();
+  };
 
   const fetchMessages = useCallback(async () => {
-    if (!tag) return;
+    if (!tag || !magic) return;
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tag/${tag.id}/feed`);
+      const didToken = await magic.user.getIdToken();
+      const response = await fetch(`/api/tag/${tag.id}/feed`, {
+        headers: {
+          'Authorization': `Bearer ${didToken}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setMessages(data.messages);
@@ -52,12 +64,18 @@ export default function TagFeedPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [tag, toast]);
+  }, [tag, magic, toast]);
 
   useEffect(() => {
     const fetchTagDetails = async () => {
       try {
-        const response = await fetch(`/api/tag/${params.id}`);
+        if (!magic) return;
+        const didToken = await magic.user.getIdToken();
+        const response = await fetch(`/api/tag/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${didToken}`
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setTag(data);
@@ -70,7 +88,7 @@ export default function TagFeedPage() {
     if (params.id) {
       fetchTagDetails();
     }
-  }, [params.id]);
+  }, [params.id, magic]);
 
   useEffect(() => {
     if (tag) {
@@ -79,18 +97,18 @@ export default function TagFeedPage() {
   }, [tag, fetchMessages]);
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
     if (autoRefresh) {
-      const id = setInterval(fetchMessages, 5000);
-      setIntervalId(id);
-    } else if (interval) {
-      clearInterval(interval);
-      setIntervalId(null);
+      intervalId = setInterval(fetchMessages, 10000);
     }
 
     return () => {
-      if (interval) clearInterval(interval);
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
     };
-  }, [autoRefresh, fetchMessages, interval]);
+  }, [autoRefresh, fetchMessages]);
 
   const formatMessage = (messageStr: string) => {
     try {
@@ -154,7 +172,11 @@ export default function TagFeedPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {messages.length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Fetching messages...
+                </div>
+              ) : messages.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No messages found in this topic.
                 </div>
@@ -165,7 +187,7 @@ export default function TagFeedPage() {
                       {formatMessage(msg.message)}
                       <div className="mt-2 text-xs text-muted-foreground">
                         Sequence: {msg.sequenceNumber} | 
-                        Consensus Time: {new Date(msg.consensusTimestamp).toLocaleString()}
+                        Consensus Time: {formatConsensusTimestamp(msg.consensusTimestamp)}
                       </div>
                     </CardContent>
                   </Card>

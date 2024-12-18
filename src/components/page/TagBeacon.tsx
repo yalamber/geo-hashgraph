@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useMagic } from '@/context/MagicProvider';
 
 interface TagDetails {
   id: string;
@@ -21,6 +22,7 @@ interface TagDetails {
 export default function TagBeaconPage() {
   const params = useParams();
   const { toast } = useToast();
+  const { magic } = useMagic();
   const [tag, setTag] = useState<TagDetails | null>(null);
   const [isSimulating, setIsSimulating] = useState(false);
   const [interval, setIntervalId] = useState<NodeJS.Timeout | null>(null);
@@ -28,7 +30,13 @@ export default function TagBeaconPage() {
   useEffect(() => {
     const fetchTagDetails = async () => {
       try {
-        const response = await fetch(`/api/tag/${params.id}`);
+        if (!magic) return;
+        const didToken = await magic.user.getIdToken();
+        const response = await fetch(`/api/tag/${params.id}`, {
+          headers: {
+            'Authorization': `Bearer ${didToken}`
+          }
+        });
         if (response.ok) {
           const data = await response.json();
           setTag(data);
@@ -41,7 +49,7 @@ export default function TagBeaconPage() {
     if (params.id) {
       fetchTagDetails();
     }
-  }, [params.id]);
+  }, [params.id, magic]);
 
   const sendBeaconMessage = async () => {
     if (!tag) return;

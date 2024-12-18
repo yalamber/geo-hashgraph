@@ -6,6 +6,7 @@ import {
   PrivateKey,
   TopicMessageSubmitTransaction,
 } from '@hashgraph/sdk';
+import { verifyAuth } from '@/lib/auth';
 
 const MIRROR_NODE_URL =
   process.env.NEXT_PUBLIC_NETWORK === 'mainnet'
@@ -13,6 +14,10 @@ const MIRROR_NODE_URL =
     : 'https://testnet.mirrornode.hedera.com';
 
 const client = Client.forTestnet();
+client.setOperator(
+  process.env.NEXT_PUBLIC_HEDERA_ACCOUNT_ID!,
+  process.env.HEDERA_PRIVATE_KEY!
+);
 
 interface MirrorNodeMessage {
   sequence_number: string;
@@ -23,9 +28,10 @@ interface MirrorNodeMessage {
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: topicId } = await params;
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -36,7 +42,6 @@ export async function POST(
     }
 
     const privateKeyString = authHeader.split(' ')[1];
-    const topicId = params.id;
 
     // Verify tag exists and get its details
     const tag = await redis.hgetall(`tag:${topicId}`);
@@ -61,24 +66,22 @@ export async function POST(
     }
 
     // Submit message to topic
-    const privateKey = PrivateKey.fromStringECDSA(privateKeyString);
-    const transaction = new TopicMessageSubmitTransaction()
+    const privateKey = PrivateKey.fromStringED25519(privateKeyString);
+    const submitMsgTx = await new TopicMessageSubmitTransaction()
       .setTopicId(topicId)
-      .setMessage(message);
+      .setMessage(message)
+      .freezeWith(client)
+      .sign(privateKey);
 
-    const frozenTx = transaction.freezeWith(client);
-    const signedTx = await frozenTx.sign(privateKey);
-    const response = await signedTx.execute(client);
-
-    const receipt = await response.getReceipt(client);
+    const submitMsgTxSubmit = await submitMsgTx.execute(client);
+    const receipt = await submitMsgTxSubmit.getReceipt(client);
 
     if (receipt.status.toString() !== 'SUCCESS') {
       throw new Error('Failed to submit message to topic');
     }
-
     return NextResponse.json({
       status: 'success',
-      transactionId: response.transactionId.toString(),
+      transactionId: submitMsgTxSubmit.transactionId.toString(),
     });
   } catch (error) {
     console.error('Error submitting message:', error);
@@ -91,10 +94,16 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const topicId = params.id;
+    const { id: topicId } = await params;
+
+    const auth = await verifyAuth(request);
+    if ('error' in auth) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
+    }
+
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '25';
     const timestamp = searchParams.get('timestamp') || '';

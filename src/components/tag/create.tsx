@@ -47,6 +47,8 @@ export default function CreateTag({
       });
     }
     try {
+      if (!magic) throw new Error('Magic not initialized');
+      const didToken = await magic.user.getIdToken();
       const { publicKeyDer } = await magic?.hedera.getPublicKey();
       const magicSign = async (message: Uint8Array): Promise<Uint8Array> => {
         const signature = await magic?.hedera.sign(message);
@@ -75,10 +77,12 @@ export default function CreateTag({
       if (transactionReceipt.status.toString() !== 'SUCCESS') {
         throw new Error('Transaction failed');
       }
+
       const response = await fetch('/api/tag', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${didToken}`,
         },
         body: JSON.stringify({
           title,

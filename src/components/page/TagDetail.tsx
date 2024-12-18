@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useMagic } from '@/context/MagicProvider';
 
 interface TagDetails {
   id: string;
@@ -27,6 +28,7 @@ interface TagDetails {
 export default function TagDetailPage() {
   const params = useParams();
   const { toast } = useToast();
+  const { magic } = useMagic();
   const [tag, setTag] = useState<TagDetails | null>(null);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +38,13 @@ export default function TagDetailPage() {
   useEffect(() => {
     const fetchTagDetails = async () => {
       try {
-        const response = await fetch(`/api/tag/${params.id}`);
+        if (!magic) return;
+        const didToken = await magic.user.getIdToken();
+        const response = await fetch(`/api/tag/${params.id}`, {
+          headers: {
+            Authorization: `Bearer ${didToken}`,
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           setTag(data);
@@ -55,17 +63,18 @@ export default function TagDetailPage() {
     if (params.id) {
       fetchTagDetails();
     }
-  }, [params.id, toast]);
+  }, [params.id, toast, magic]);
 
   const handleSubmitMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !tag) return;
+    if (!message.trim() || !tag || !magic) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/tag/${tag.id}/message`, {
+      const response = await fetch(`/api/tag/${tag.id}/feed`, {
         method: 'POST',
         headers: {
+          Authorization: `Bearer ${tag.privateKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ message }),
@@ -111,17 +120,11 @@ export default function TagDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <Card>
             <CardHeader>
-              <CardTitle>{tag.name}</CardTitle>
-              <CardDescription>{tag.description}</CardDescription>
-              <div className="flex gap-4 mt-4">
-                <Link
-                  href={`/tag/${tag.id}/feed`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  View Feed
-                </Link>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{tag.name}</CardTitle>
+                  <CardDescription>{tag.description}</CardDescription>
+                </div>
                 <Link
                   href={`/tag/${tag.id}/test-beacon`}
                   target="_blank"
@@ -192,10 +195,22 @@ export default function TagDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Submit Message</CardTitle>
-              <CardDescription>
-                Send a message to this topic using the form below
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Submit Message</CardTitle>
+                  <CardDescription>
+                    Send a test message to this topic using the form below
+                  </CardDescription>
+                </div>
+                <Link
+                  href={`/tag/${tag.id}/feed`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  View Feed
+                </Link>
+              </div>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitMessage} className="space-y-4">

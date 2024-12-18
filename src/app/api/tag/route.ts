@@ -8,7 +8,6 @@ import {
   HbarUnit,
 } from '@hashgraph/sdk';
 import redis from '@/lib/redis';
-import { getAccountIdfromTxId } from '@/lib/utils';
 import { verifyAuth } from '@/lib/auth';
 
 const client = Client.forTestnet();
@@ -21,25 +20,22 @@ export async function GET(request: Request) {
   try {
     const auth = await verifyAuth(request);
     if ('error' in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { searchParams } = new URL(request.url);
-    const accountId = searchParams.get('accountId');
+    const authIssuer = searchParams.get('issuer');
 
     // Verify the requester is accessing their own data
-    if (accountId !== auth.address) {
+    if (authIssuer !== auth.issuer) {
       return NextResponse.json(
         { error: 'Unauthorized access' },
         { status: 403 }
       );
     }
 
-    // Get tag IDs for specific account
-    const tagIds = await redis.smembers(`account:${accountId}:tags`);
+    // Get tag IDs for specific account using issuer
+    const tagIds = await redis.smembers(`account:${authIssuer}:tags`);
 
     // Fetch full tag details for each ID
     const tags = await Promise.all(
@@ -66,22 +62,10 @@ export async function POST(request: Request) {
   try {
     const auth = await verifyAuth(request);
     if ('error' in auth) {
-      return NextResponse.json(
-        { error: auth.error },
-        { status: auth.status }
-      );
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
     const { title, description, transactionId } = await request.json();
-    const accountId = getAccountIdfromTxId(transactionId);
-
-    // Verify the transaction is from the authenticated user
-    if (accountId !== auth.address) {
-      return NextResponse.json(
-        { error: 'Transaction not from authenticated user' },
-        { status: 403 }
-      );
-    }
 
     // Get transaction details
     const transactionRecord = await new TransactionRecordQuery()
@@ -110,7 +94,7 @@ export async function POST(request: Request) {
 
     // Create a new private topic
     const topicCreateTx = new TopicCreateTransaction()
-      .setTopicMemo(`geo-tag-${accountId}`)
+      .setTopicMemo(`geo-tag-${title}`)
       .setSubmitKey(publicKey)
       .freezeWith(client);
     const topicCreateTxSigned = await topicCreateTx.sign(
@@ -140,7 +124,7 @@ export async function POST(request: Request) {
       publicKey: publicKey.toString(),
     });
     // Add tag to account's set of tags
-    await redis.sadd(`account:${accountId}:tags`, topicId);
+    await redis.sadd(`account:${auth.issuer}:tags`, topicId);
 
     return NextResponse.json(responseTag);
   } catch (error) {
