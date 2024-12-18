@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Geo.Delivery
 
-## Getting Started
+Geo.delivery simplifies IoT communication by leveraging Hedera Consensus Service to ensure secure, scalable, and efficient device messaging. The platform provides real-time, reliable data exchange for IoT devices, enabling seamless integration and robust performance across applications.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Hedera Hashgraph integration
+- Magic.link authentication
+- Iot messaging api endpoint integrated to hedera consensus service
+- Responsive UI built with Tailwind CSS
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js 15.1, React 19
+- **Authentication**: Magic.link (with Hedera extension)
+- **Blockchain**: Hedera Hashgraph
+- **Styling**: Tailwind CSS, Radix UI components
+- **Database**: Redis
+- **Language**: TypeScript
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📋 Prerequisites
 
-## Learn More
+- Node.js (Latest LTS version recommended)
+- Redis server
+- Hedera testnet account
+- Magic.link account
 
-To learn more about Next.js, take a look at the following resources:
+## Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+To run this project, you'll need to set up the following environment variables in your `.env` file, copy .env.sample and setup as below
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Required Variables Explanation:
 
-## Deploy on Vercel
+1. **Magic.link Authentication:**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   - `NEXT_PUBLIC_MAGIC_KEY`: Public API key from Magic.link dashboard
+   - `MAGIC_SECRET_KEY`: Secret key from Magic.link dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Hedera Network:**
+
+   - `NEXT_PUBLIC_NETWORK`: Specify which Hedera network to use ('testnet' or 'mainnet')
+   - `NEXT_PUBLIC_HEDERA_ACCOUNT_ID`: Your Operator Hedera account ID
+   - `HEDERA_PRIVATE_KEY`: Your Operator Hedera account private key
+
+3. **Database:**
+   - `REDIS_URL`: Connection URL for Redis database
+
+## Running locally
+
+    - clone repo and `cd path` in to it
+    - `npm install` dependencies
+    - copy .env.sample to .env and update env variables
+    - `npm run dev` to run the project locally
