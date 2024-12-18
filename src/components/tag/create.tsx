@@ -29,7 +29,7 @@ export default function CreateTag({
   onTagCreated?: (tag: TagItem) => void;
 }) {
   const { magic } = useMagic();
-  const { user } = useUser();
+  const { user, balance } = useUser();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -124,11 +124,22 @@ export default function CreateTag({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (user) {
+          setOpen(newOpen);
+        }
+      }}
+    >
       <DialogTrigger asChild disabled={!user}>
-        <div className={`border-2 border-dashed rounded-lg p-4 transition-shadow cursor-pointer h-full flex flex-col items-center justify-center text-gray-500 min-h-[200px] ${
-          user ? 'hover:shadow-lg hover:text-gray-700' : 'opacity-50 cursor-not-allowed'
-        }`}>
+        <div
+          className={`border-2 border-dashed rounded-lg p-4 transition-shadow cursor-pointer h-full flex flex-col items-center justify-center text-gray-500 min-h-[200px] ${
+            user
+              ? 'hover:shadow-lg hover:text-gray-700'
+              : 'opacity-50 cursor-not-allowed'
+          }`}
+        >
           <svg
             className="w-12 h-12 mb-2"
             fill="none"
@@ -150,6 +161,19 @@ export default function CreateTag({
       <DialogContent className="top-[5%] translate-y-0">
         <DialogHeader>
           <DialogTitle>Create New Tag</DialogTitle>
+          {balance?.toBigNumber().toNumber() === 0 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              You need HBAR to create a tag.{' '}
+              <a
+                href="https://portal.hedera.com/faucet"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-600 underline"
+              >
+                Get testnet HBAR from faucet
+              </a>
+            </p>
+          )}
         </DialogHeader>
         <form onSubmit={handleCreateTag} className="space-y-4">
           <Input
@@ -158,7 +182,7 @@ export default function CreateTag({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-            disabled={isLoading}
+            disabled={isLoading || balance?.toBigNumber().toNumber() === 0}
           />
           <Textarea
             placeholder="Enter tag description"
