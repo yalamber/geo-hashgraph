@@ -23,7 +23,7 @@ export default function Homepage() {
   const fetchTags = useCallback(async () => {
     try {
       setIsLoading(true);
-      if (!user || !magic) return;
+      if (!user?.address || !magic) return;
       const didToken = await magic.user.getIdToken();
       const response = await fetch(`/api/tag?issuer=${user.issuer}`, {
         headers: {
@@ -42,7 +42,11 @@ export default function Homepage() {
   }, [user, magic]);
 
   useEffect(() => {
-    if (user) fetchTags();
+    if (user) {
+      fetchTags();
+    } else {
+      setTags([]);
+    }
   }, [user, fetchTags]);
 
   const handleTagCreated = (newTag: TagItem) => {

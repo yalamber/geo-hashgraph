@@ -8,18 +8,17 @@ const DisconnectButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { magic } = useMagic();
-  const { fetchUser } = useUser();
+  const { fetchUser, onLogout } = useUser();
 
   const handleDisconnect = async () => {
     try {
       setIsLoading(true);
+      onLogout();
       await magic?.user.logout();
       await fetchUser();
-      
       // Redirect to homepage and refresh
       router.push('/');
       router.refresh();
-      
     } catch (error) {
       console.log('handleDisconnect:', error);
     } finally {

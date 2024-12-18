@@ -23,6 +23,7 @@ type UserContextType = {
   balance: Hbar | null;
   loading: boolean;
   fetchUser: () => Promise<void>;
+  onLogout: () => void;
 };
 
 // Create a context for user data.
@@ -31,6 +32,7 @@ const UserContext = createContext<UserContextType>({
   balance: new Hbar(0, HbarUnit.Hbar),
   loading: true,
   fetchUser: async () => {},
+  onLogout: () => {},
 });
 
 // Custom hook for accessing user context data.
@@ -52,10 +54,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Function to retrieve and set user's account.
   const fetchUserAccount = useCallback(async () => {
     if (!magic) return;
-
     try {
       setLoading(true);
-
       const isLoggedIn = await magic.user.isLoggedIn();
       if (!isLoggedIn) return;
       const { publicAddress, issuer } = await magic.user.getInfo();
@@ -79,6 +79,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     fetchUserAccount();
   }, [fetchUserAccount]);
 
+  function onLogout() {
+    setIssuer(null);
+    setBalance(null);
+    setAddress(null);
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -86,6 +92,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         balance,
         loading,
         fetchUser: fetchUserAccount,
+        onLogout,
       }}
     >
       {children}
