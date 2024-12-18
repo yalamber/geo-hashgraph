@@ -242,7 +242,7 @@ export default function TagDetailPage() {
                   your private key:
                 </p>
                 <code className="bg-gray-100 p-2 rounded block">
-                  POST /api/tag/{tag.id}/feed
+                  POST https://www.geo.delivery/api/tag/{tag.id}/feed
                 </code>
                 <p className="mt-2">Headers:</p>
                 <pre className="bg-gray-100 p-2 rounded mt-1">
@@ -270,7 +270,7 @@ export default function TagDetailPage() {
                 <h3 className="font-semibold mb-2">Read Messages</h3>
                 <p className="mb-2">To read messages from this topic:</p>
                 <code className="bg-gray-100 p-2 rounded block">
-                  GET /api/tag/{tag.id}/feed
+                  GET https://www.geo.delivery/api/tag/{tag.id}/feed
                 </code>
               </div>
             </div>
