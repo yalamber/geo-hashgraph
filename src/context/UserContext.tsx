@@ -20,7 +20,6 @@ type User = {
 type UserContextType = {
   user: User | null;
   balance: Hbar | null;
-  agentAccountBalance: Hbar | null;
   loading: boolean;
   fetchUser: () => Promise<void>;
 };
@@ -29,7 +28,6 @@ type UserContextType = {
 const UserContext = createContext<UserContextType>({
   user: null,
   balance: new Hbar(0, HbarUnit.Hbar),
-  agentAccountBalance: new Hbar(0, HbarUnit.Hbar),
   loading: true,
   fetchUser: async () => {},
 });
@@ -48,9 +46,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize user state to hold user's account information.
   const [address, setAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<Hbar | null>(null);
-  const [agentAccountBalance, setAgentAccountBalance] = useState<Hbar | null>(
-    null
-  );
   const [loading, setLoading] = useState<boolean>(true);
   // Function to retrieve and set user's account.
   const fetchUserAccount = useCallback(async () => {
@@ -66,10 +61,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       if (!publicAddress) return;
 
       const accountBalance = await hashClient.getAccountBalance(publicAddress);
-      const agentAccountBalance = await hashClient.getAccountBalance(
-        process.env.NEXT_PUBLIC_AGENT_ACCOUNT_ID!
-      );
-      setAgentAccountBalance(agentAccountBalance.hbars);
       setBalance(accountBalance.hbars);
       setAddress(publicAddress);
     } catch (error) {
@@ -91,7 +82,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       value={{
         user: address ? { address } : null,
         balance,
-        agentAccountBalance,
         loading,
         fetchUser: fetchUserAccount,
       }}

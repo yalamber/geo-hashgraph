@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 
 import MagicProvider from '@/context/MagicProvider';
 import { UserProvider } from '@/context/UserContext';
+import { Toaster } from '@/components/ui/toaster';
 
 import './globals.css';
 
@@ -17,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ChatHashGraph',
-  description: 'Chat with hashgraph agent',
+  title: 'Geo.delivery',
+  description: 'Track your deliveries',
 };
 
 export default function RootLayout({
@@ -34,6 +35,7 @@ export default function RootLayout({
         <MagicProvider>
           <UserProvider>{children}</UserProvider>
         </MagicProvider>
+        <Toaster />
       </body>
     </html>
   );

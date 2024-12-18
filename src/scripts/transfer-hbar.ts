@@ -7,8 +7,8 @@ import {
   TransferTransaction,
 } from '@hashgraph/sdk';
 
-const operatorIdStr = process.env.NEXT_PUBLIC_AGENT_ACCOUNT_ID;
-const operatorKeyStr = process.env.AGENT_PRIVATE_KEY;
+const operatorIdStr = process.env.NEXT_PUBLIC_HEDERA_ACCOUNT_ID;
+const operatorKeyStr = process.env.HEDERA_PRIVATE_KEY;
 
 if (!operatorIdStr || !operatorKeyStr) {
   throw new Error('Must set AGENT_ACCOUNT_ID, AGENT_PRIVATE_KEY');
@@ -23,10 +23,7 @@ const sendAmount = 100;
 
 const transferTx = new TransferTransaction()
   .setTransactionMemo(`Hello Future World transfer`)
-  .addHbarTransfer(
-    process.env.NEXT_PUBLIC_AGENT_ACCOUNT_ID!,
-    new Hbar(-sendAmount, HbarUnit.Hbar)
-  )
+  .addHbarTransfer(operatorIdStr, new Hbar(-sendAmount, HbarUnit.Hbar))
   .addHbarTransfer('0.0.5275837', new Hbar(sendAmount, HbarUnit.Hbar))
   // Freeze the transaction to prepare for signing
   .freezeWith(client);

@@ -22,9 +22,6 @@ const io = new Server(http, {
     origin: '*',
   },
 });
-const redisClient = new Redis(
-  `rediss://default:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
-);
 const topicId = process.env.NEXT_PUBLIC_TOPIC_ID!;
 const agentAccount = process.env.NEXT_PUBLIC_AGENT_ACCOUNT_ID1;
 const agentKey = PrivateKey.fromStringECDSA(process.env.AGENT_PRIVATE_KEY!);
