@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Disconnect from '@/components/auth/disconnect';
+import Connect from '@/components/auth/connect';
 import { Button } from '@/components/ui/button';
 
 export default function Header({ pageTitle }: { pageTitle: string }) {
@@ -39,15 +40,15 @@ export default function Header({ pageTitle }: { pageTitle: string }) {
       <div className="flex items-center gap-4">
         {loading ? (
           <div className="w-5 h-5 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+        ) : user ? (
+          <>
+            <span className="text-gray-600 text-sm">
+              {user.address} • {balance?.toString()}
+            </span>{' '}
+            <Disconnect />
+          </>
         ) : (
-          user && (
-            <>
-              <span className="text-gray-600 text-sm">
-                {user.address} • {balance?.toString()}
-              </span>{' '}
-              <Disconnect />
-            </>
-          )
+          <Connect />
         )}
       </div>
     </header>

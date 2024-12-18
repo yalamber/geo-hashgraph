@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useMagic } from '@/context/MagicProvider';
 import { useUser } from '@/context/UserContext';
 
-const ConnectButton = ({ label = 'Connect to chat' }) => {
+const ConnectButton = ({ label = 'Connect' }) => {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState('');
   const { magic } = useMagic();

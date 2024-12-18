@@ -125,8 +125,10 @@ export default function CreateTag({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <div className="border-2 border-dashed rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col items-center justify-center text-gray-500 hover:text-gray-700 min-h-[200px]">
+      <DialogTrigger asChild disabled={!user}>
+        <div className={`border-2 border-dashed rounded-lg p-4 transition-shadow cursor-pointer h-full flex flex-col items-center justify-center text-gray-500 min-h-[200px] ${
+          user ? 'hover:shadow-lg hover:text-gray-700' : 'opacity-50 cursor-not-allowed'
+        }`}>
           <svg
             className="w-12 h-12 mb-2"
             fill="none"
@@ -140,7 +142,9 @@ export default function CreateTag({
               d="M12 6v6m0 0v6m0-6h6m-6 0H6"
             />
           </svg>
-          <span className="text-lg font-semibold">Create New Tag</span>
+          <span className="text-lg font-semibold">
+            {user ? 'Create New Tag' : 'Login to Create Tag'}
+          </span>
         </div>
       </DialogTrigger>
       <DialogContent className="top-[5%] translate-y-0">
